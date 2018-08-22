@@ -10,43 +10,34 @@ import (
 )
 
 type words struct {
-	words []string
+	Words []string `json:"words"`
 }
 
 type counts struct {
-	counts map[string]uint32
+	Counts map[string]uint32 `json:"counts"`
 }
 
 func countWords(wds words) counts {
-	cts := make(map[string]uint32)
-
-	for _, word := range wds.words {
-		ct, prs := cts[word]
-
-		if prs {
-			cts[word] = ct + 1
-		} else {
-			cts[word] = 1
+	cts := counts{Counts: make(map[string]uint32)}
+	for _, word := range wds.Words {
+		if ct, ok := cts.Counts[word]; ok {
+			cts.Counts[word] = ct + 1
+			continue
 		}
+		cts.Counts[word] = 1
 	}
-
-	return counts{cts}
+	return cts
 }
 
 func handleWords(writer http.ResponseWriter, request *http.Request) {
-	decoder := json.NewDecoder(request.Body)
-
 	var wds words
-	decodeErr := decoder.Decode(&wds)
-	if decodeErr != nil {
-		panic(decodeErr) // FIXME
+	decoder := json.NewDecoder(request.Body)
+	if err := decoder.Decode(&wds); err != nil {
+		panic(err) // FIXME
 	}
-
 	encoder := json.NewEncoder(writer)
-
-	encodeErr := encoder.Encode(countWords(wds))
-	if encodeErr != nil {
-		panic(encodeErr) // FIXME
+	if err := encoder.Encode(countWords(wds)); err != nil {
+		panic(err) // FIXME
 	}
 }
 
